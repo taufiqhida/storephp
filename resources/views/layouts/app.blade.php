@@ -80,30 +80,6 @@
             font-family: inherit;
         }
 
-        /* ════════════════════════════════════
-           FLASH ANNOUNCEMENT BAR
-        ════════════════════════════════════ */
-        .flash-bar {
-            background: linear-gradient(90deg, #f59e0b 0%, #ef4444 50%, #f59e0b 100%);
-            background-size: 200% 100%;
-            animation: shimmer-bar 3s linear infinite;
-            color: #fff;
-            font-size: .78rem;
-            font-weight: 700;
-            text-align: center;
-            padding: .52rem 1rem;
-            letter-spacing: .04em;
-        }
-
-        @keyframes shimmer-bar {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            100% {
-                background-position: 200% 50%;
-            }
-        }
 
         /* ════════════════════════════════════
            NAVBAR
@@ -1362,37 +1338,137 @@
     @endphp
 
     @if($setting->is_announcement_active && $setting->announcement_text)
-        <div class="fixed top-0 left-0 right-0 z-50 bg-primary-600 text-white text-center py-2 px-4 shadow-sm text-sm font-medium transition-transform duration-300 transform" id="announcement-banner">
-            @if($setting->announcement_link)
-                <a href="{{ $setting->announcement_link }}" class="hover:underline flex items-center justify-center gap-2">
-                    <i class="fas fa-bullhorn text-yellow-300"></i>
-                    <span>{{ $setting->announcement_text }}</span>
-                    <i class="fas fa-arrow-right text-xs"></i>
-                </a>
-            @else
-                <div class="flex items-center justify-center gap-2">
-                    <i class="fas fa-bullhorn text-yellow-300"></i>
-                    <span>{{ $setting->announcement_text }}</span>
+        <div id="promo-bar">
+            <div id="promo-bar-inner">
+                {{-- Badge kiri --}}
+                <div id="promo-badge">
+                    <span>TODAY'S</span>
+                    <span>SALE</span>
                 </div>
-            @endif
+
+                {{-- Teks tengah --}}
+                <div id="promo-text">
+                    {{ $setting->announcement_text }}
+                </div>
+
+                {{-- Kanan: trust text + tombol --}}
+                <div id="promo-actions">
+                    @if($setting->announcement_deadline)
+                        @php
+                            $bulan = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                            $dl = \Carbon\Carbon::parse($setting->announcement_deadline);
+                            $tglDeadline = $dl->day . ' ' . $bulan[$dl->month] . ' ' . $dl->year;
+                        @endphp
+                        <span id="promo-trust">
+                            <i class="fas fa-calendar-alt"></i>
+                            Berlaku hingga {{ $tglDeadline }}
+                        </span>
+                    @endif
+                    @if($setting->announcement_link)
+                        <a href="{{ $setting->announcement_link }}" id="promo-btn">Ambil Promo</a>
+                    @endif
+                </div>
+            </div>
         </div>
         <style>
-            body { padding-top: 112px !important; } /* Adjust padding for navbar + banner */
-            .fixed.top-0 { top: 40px !important; } /* Push navbar down (if it was fixed at top 0) */
-            nav.fixed { top: 40px !important; }
-            #announcement-banner { top: 0 !important; }
+            #promo-bar {
+                background: linear-gradient(90deg, #0d1117 0%, #141c2b 50%, #0d1117 100%);
+                border-bottom: 1px solid rgba(255, 255, 255, .07);
+                padding: 0 1.5rem;
+                position: relative;
+                z-index: 201;
+            }
+
+            #promo-bar-inner {
+                max-width: 1280px;
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                gap: 1.25rem;
+                height: 52px;
+            }
+
+            #promo-badge {
+                background: linear-gradient(135deg, #e91e8c, #c2185b);
+                color: #fff;
+                font-size: .6rem;
+                font-weight: 900;
+                padding: .3rem .5rem;
+                border-radius: 6px;
+                text-align: center;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                line-height: 1.25;
+                flex-shrink: 0;
+                box-shadow: 0 2px 10px rgba(233, 30, 140, .4);
+            }
+
+            #promo-text {
+                flex: 1;
+                font-size: .82rem;
+                font-weight: 500;
+                color: rgba(255, 255, 255, .9);
+                line-height: 1.45;
+                text-align: center;
+            }
+
+            #promo-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-shrink: 0;
+            }
+
+            #promo-trust {
+                font-size: .78rem;
+                font-weight: 600;
+                color: rgba(255, 255, 255, .7);
+                display: flex;
+                align-items: center;
+                gap: .35rem;
+                white-space: nowrap;
+            }
+
+            #promo-trust i {
+                color: #4ade80;
+                font-size: .8rem;
+            }
+
+            #promo-btn {
+                background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                color: #fff;
+                font-size: .8rem;
+                font-weight: 700;
+                padding: .45rem 1.15rem;
+                border-radius: 8px;
+                white-space: nowrap;
+                transition: all .2s;
+                text-decoration: none;
+                box-shadow: 0 3px 12px rgba(37, 99, 235, .4);
+            }
+
+            #promo-btn:hover {
+                background: linear-gradient(135deg, #1d4ed8, #1e40af);
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(37, 99, 235, .5);
+            }
+
+            @media (max-width: 640px) {
+                #promo-trust {
+                    display: none;
+                }
+
+                #promo-text {
+                    font-size: .75rem;
+                    text-align: left;
+                }
+            }
         </style>
     @endif
 
     @php $hasFlash = isset($flashSales) && $flashSales->count() > 0; @endphp
 
     {{-- FLASH BAR --}}
-    @if($hasFlash)
-        <div class="flash-bar">
-            ⚡ Flash Sale sedang berlangsung — Penawaran terbatas!
-            <a href="{{ route('flash-sale') }}" style="text-decoration:underline;margin-left:.4rem;">Lihat Sekarang →</a>
-        </div>
-    @endif
 
     {{-- NAVBAR --}}
     <nav class="navbar">

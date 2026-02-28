@@ -1,59 +1,130 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Taufiq Store - Panduan Instalasi & Upload ke Hosting
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi ini dibangun menggunakan Laravel 11. Berikut adalah panduan langkah demi langkah untuk mengunggah (deploy) aplikasi ini ke CPanel / Shared Hosting dengan aman.
 
-## About Laravel
+## Persiapan di Komputer Lokal (Sebelum Upload)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. Buka terminal/command prompt di dalam folder project ini.
+2. Pastikan file `.env` sudah sesuai (misal tidak ada kredensial lokal yang tertinggal).
+3. Jalankan perintah optimasi Laravel agar performa web menjadi cepat di hosting:
+   ```bash
+   composer install --optimize-autoloader --no-dev
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+4. Eksport database lokal Anda (buka phpMyAdmin di localhost, pilih database Anda, lalu Export menjadi file `.sql`).
+5. Jadikan seluruh isi folder project ini (semua file dan folder) ke dalam satu file `.zip` (misalnya: `project-store.zip`).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Proses Upload & Setup di CPanel (Hosting)
 
-## Learning Laravel
+### Langkah 1: Upload File Project
+Sangat disarankan untuk **tidak** menaruh file inti/core sistem Laravel langsung di dalam `public_html` demi alasan keamanan.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. Login ke akun cPanel Hosting Anda.
+2. Buka menu **File Manager**.
+3. Di root directory hosting / home (posisinya di luar dan sejajar dengan folder `public_html`), buat folder baru, misalnya `project-store`.
+4. Masuk ke dalam folder `project-store` tersebut.
+5. Klik **Upload**, lalu pilih file `project-store.zip` yang sudah Anda buat tadi.
+6. Setelah upload selesai 100%, kembali ke File Manager, klik kanan pada file ZIP tersebut, lalu pilih **Extract**.
+7. Pastikan semua file project (seperti folder `app`, `bootstrap`, file `.env`, dll) sudah terekstrak rapi di dalam folder tersebut.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Langkah 2: Memindahkan Folder Public
+1. Buka folder `public` yang ada di dalam instalasi Laravel tadi (`project-store/public`).
+2. **Select All** (Pilih semua) file dan folder yang ada di dalamnya, termasuk `.htaccess` dan `index.php`.
+3. Pindahkan (**Move**) semua file tersebut ke dalam folder utama web Anda, yaitu `public_html`.
 
-## Laravel Sponsors
+### Langkah 3: Mengedit File `index.php`
+Karena file `index.php` sekarang berada di `public_html`, sedangkan folder sistem Laravel ada di `project-store`, kita harus menyesuaikan lokasi filenya.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Masuk ke folder `public_html`.
+2. Klik kanan pada file `index.php`, lalu pilih **Edit**.
+3. Cari baris ini:
+   ```php
+   require __DIR__.'/../vendor/autoload.php';
+   ```
+   Lalu ubah menjadi:
+   ```php
+   require __DIR__.'/../project-store/vendor/autoload.php';
+   ```
+4. Cari juga baris ini:
+   ```php
+   $app = require_once __DIR__.'/../bootstrap/app.php';
+   ```
+   Lalu ubah menjadi:
+   ```php
+   $app = require_once __DIR__.'/../project-store/bootstrap/app.php';
+   ```
+5. Klik **Save Changes**.
 
-### Premium Partners
+### Langkah 4: Setup Database di cPanel
+1. Kembali ke halaman utama cPanel, lalu buka **MySQL® Databases**.
+2. Buat database baru (misalnya: `db_store`).
+3. Buat user database baru beserta passwordnya (catat password ini).
+4. Assign / Tambahkan user tersebut ke database `db_store`, lalu pastikan untuk mencentang kotak **ALL PRIVILEGES**.
+5. Kembali ke cPanel, lalu buka **phpMyAdmin**.
+6. Pilih database baru yang baru saja Anda buat, lalu masuk ke tab **Import**.
+7. Unggah (Upload) file `.sql` milik Anda yang diekspor pada tahap persiapan. Klik Go/Import.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Langkah 5: Konfigurasi `.env`
+1. Buka kembali File Manager, cari folder `project-store` tempat inti Laravel berada.
+2. Cari file bernama `.env` (Jika tidak terlihat, pergi ke bagian Settings/Pengaturan di sudut kanan atas File Manager, lalu centang *Show Hidden Files (dotfiles)*).
+3. Klik kanan pada file `.env` dan pilih **Edit**.
+4. Perbarui pengaturan berikut sesuai data web dan database hosting Anda:
+   ```env
+   APP_NAME="Taufiq Store"
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://namadomainanda.com
 
-## Contributing
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=nama_database_cpanel_anda
+   DB_USERNAME=user_database_cpanel_anda
+   DB_PASSWORD=password_database_anda
+   ```
+5. Simpan perubahan.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Langkah 6: Membuat Storage Link (Sangat Penting untuk Gambar)
+Aplikasi memuat gambar produk dan media dari direktori `storage`. Di hosting, Anda tetap perlu membuat link `storage` agar bisa diakses dari `public_html`.
 
-## Code of Conduct
+**Cara Termudah (Via Terminal cPanel jika tersedia):**
+1. Buka menu **Terminal** di beranda cPanel.
+2. Ketik perintah: `cd project-store` lalu tekan Enter.
+3. Jalankan perintah: `php artisan storage:link`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Alternatif (Via Web browser jika Terminal tidak tersedia di cPanel):**
+1. Buat file baru bernama `buat_symlink.php` tepat di dalam folder `public_html`.
+2. Isi dengan kode berikut:
+   ```php
+   <?php
+   // Sesuaikan 'project-store' dengan nama folder Laravel Anda
+   $targetFolder = $_SERVER['DOCUMENT_ROOT'].'/../project-store/storage/app/public';
+   $linkFolder = $_SERVER['DOCUMENT_ROOT'].'/storage';
+   
+   if(symlink($targetFolder, $linkFolder)) {
+       echo 'Symlink process successfully completed!';
+   } else {
+       echo 'Symlink process failed!';
+   }
+   ?>
+   ```
+3. Buka browser dan kunjungi `https://namadomainanda.com/buat_symlink.php`.
+4. Jika berhasil, akan muncul tulisan berhasil. **SETELAH ITU, SEGARA HAPUS file `buat_symlink.php`** dari `public_html` masalah keamanan.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## FAQ & Solusi Kendala Populer
 
-## License
+- **Muncul Error 500 (Server Error)**: 
+  Cek versi PHP di cPanel Anda melalui fitur **Select PHP Version**. Laravel 11 membutuhkan setidaknya **PHP 8.2**. Pastikan ekstensi seperti `fileinfo`, `gd`, dan `pdo` telah diaktifkan di sana.
+- **Gambar Produk Tidak Muncul / Error 404**: 
+  Hal ini dikarenakan Anda melompati **Langkah 6**. Pastikan folder `storage` symlink sudah otomatis terbuat di dalam `public_html`.
+- **Situs Lemot**: 
+  Pastikan Anda telah menjalankan perintah cache di opsi persiapan (`config:cache`, `view:cache`). Pastikan `.env` bagian `APP_DEBUG` disetel ke `false`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+Selamat, website e-commerce Anda kini telah live di hosting! Halaman admin Filament dapat Anda akses di url `/admin` (misal: `https://namadomainanda.com/admin`).

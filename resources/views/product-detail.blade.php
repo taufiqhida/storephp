@@ -499,10 +499,10 @@
                 </button>
             </div>
 
-            @if($product->stock !== null)
+            @if($soldCount > 0)
                 <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--muted);">
-                    <i class="fas fa-box" style="font-size:.7rem;"></i>
-                    Stok tersedia: <strong style="color:var(--dark);">{{ $product->stock }} pcs</strong>
+                    <i class="fas fa-fire" style="font-size:.7rem;color:#ef4444;"></i>
+                    Produk terjual sebanyak: <strong style="color:var(--dark);">{{ $soldCount }} pcs</strong>
                 </p>
             @endif
         </div>
@@ -631,8 +631,10 @@
                 <div class="form-group">
                     <label class="form-label">Kode Pembelian *</label>
                     <div style="display:flex;gap:0.5rem;">
-                        <input type="text" class="form-control" id="testiOrderCode" placeholder="Masukkan kode pembelian (contoh: TS-XXXXXXXX)" style="text-transform:uppercase;">
-                        <button class="btn btn-primary" onclick="validateOrderForTestimonial()" id="testiValidateBtn" style="white-space:nowrap;">
+                        <input type="text" class="form-control" id="testiOrderCode"
+                            placeholder="Masukkan kode pembelian (contoh: TS-XXXXXXXX)" style="text-transform:uppercase;">
+                        <button class="btn btn-primary" onclick="validateOrderForTestimonial()" id="testiValidateBtn"
+                            style="white-space:nowrap;">
                             Verifikasi
                         </button>
                     </div>
@@ -660,7 +662,8 @@
 
                 <div class="form-group">
                     <label class="form-label">Pesan / Ulasan *</label>
-                    <textarea class="form-control" id="testiMessage" placeholder="Ceritakan pengalaman Anda..." rows="3" maxlength="500"></textarea>
+                    <textarea class="form-control" id="testiMessage" placeholder="Ceritakan pengalaman Anda..." rows="3"
+                        maxlength="500"></textarea>
                     <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem;text-align:right;">
                         <span id="testiCharCount">0</span>/500 karakter
                     </div>
@@ -676,7 +679,8 @@
                 <div style="text-align:center;padding:1.5rem 0;">
                     <div style="font-size:3rem;margin-bottom:0.75rem;">🎉</div>
                     <div style="font-weight:700;font-size:1.05rem;margin-bottom:0.35rem;">Terima Kasih!</div>
-                    <div style="color:var(--mid);font-size:0.85rem;">Ulasan Anda akan ditampilkan setelah disetujui admin.</div>
+                    <div style="color:var(--mid);font-size:0.85rem;">Ulasan Anda akan ditampilkan setelah disetujui admin.
+                    </div>
                 </div>
             </div>
         </div>
@@ -963,7 +967,7 @@
                     msg.style.color = 'var(--red)';
                     msg.textContent = '❌ ' + data.message;
                 }
-            } catch(e) {
+            } catch (e) {
                 toast('Gagal memverifikasi kode', 'err');
             }
 
@@ -979,7 +983,7 @@
         }
 
         // Character counter
-        document.getElementById('testiMessage')?.addEventListener('input', function() {
+        document.getElementById('testiMessage')?.addEventListener('input', function () {
             document.getElementById('testiCharCount').textContent = this.value.length;
         });
 
@@ -1011,7 +1015,7 @@
                 } else {
                     toast(data.message || 'Gagal mengirim ulasan', 'err');
                 }
-            } catch(e) {
+            } catch (e) {
                 toast('Gagal mengirim ulasan', 'err');
             }
 

@@ -19,11 +19,13 @@ class StoreSetting extends Model
         'is_announcement_active',
         'announcement_text',
         'announcement_link',
+        'announcement_deadline',
     ];
 
     protected $casts = [
         'launch_date' => 'datetime',
         'is_announcement_active' => 'boolean',
+        'announcement_deadline' => 'date',
     ];
 
     public static function get(string $key, $default = null)

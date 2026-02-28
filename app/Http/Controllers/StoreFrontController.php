@@ -70,7 +70,10 @@ class StoreFrontController extends Controller
             ->limit(20)
             ->get();
 
-        return view('product-detail', compact('product', 'flashSale', 'setting', 'paymentMethods', 'testimonials'));
+        // Hitung total unit terjual untuk produk ini
+        $soldCount = OrderItem::where('product_id', $product->id)->sum('quantity');
+
+        return view('product-detail', compact('product', 'flashSale', 'setting', 'paymentMethods', 'testimonials', 'soldCount'));
     }
 
     public function flashSale()

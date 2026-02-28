@@ -85,7 +85,13 @@ class StoreSettings extends Page implements HasForms
                     ->label('Link Pengumuman (Opsional)')
                     ->url()
                     ->placeholder('Misal: https://taufiq.store/flash-sale')
-                    ->helperText('Jika diisi, banner bisa diklik. Kosongkan jika teks biasa.')
+                    ->helperText('Jika diisi, tombol "Ambil Promo" bisa diklik. Kosongkan jika tidak ada link.')
+                    ->visible(fn($get) => $get('is_announcement_active')),
+                DateTimePicker::make('announcement_deadline')
+                    ->label('Berlaku Hingga')
+                    ->helperText('Tanggal batas akhir promo yang tampil di banner (misal: "Berlaku hingga 31 Mar 2025").')
+                    ->displayFormat('d M Y')
+                    ->format('Y-m-d')
                     ->visible(fn($get) => $get('is_announcement_active')),
             ]),
         ]);
