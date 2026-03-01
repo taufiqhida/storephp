@@ -1494,6 +1494,11 @@
                     <i class="fas fa-newspaper"></i>
                     <span class="nav-link-text">Artikel</span>
                 </a>
+                <a href="{{ route('riwayat-pesanan') }}"
+                    class="nav-link {{ request()->routeIs('riwayat-pesanan') ? 'active' : '' }}">
+                    <i class="fas fa-receipt"></i>
+                    <span class="nav-link-text">Pesanan Saya</span>
+                </a>
                 <a href="{{ route('cart') }}" class="nav-cart-btn">
                     <i class="fas fa-shopping-bag"></i>
                     <span class="nav-link-text">Keranjang</span>

@@ -9,8 +9,16 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewOrder extends ViewRecord
 {
     protected static string $resource = OrderResource::class;
+
     protected function getHeaderActions(): array
     {
-        return [Actions\EditAction::make()->label('Update Status')];
+        return [
+            Actions\EditAction::make()->label('Update Status'),
+            Actions\Action::make('cetak_nota')
+                ->label('🖨️ Cetak Nota')
+                ->color('success')
+                ->url(fn() => route('admin.nota', $this->record->id))
+                ->openUrlInNewTab(),
+        ];
     }
 }

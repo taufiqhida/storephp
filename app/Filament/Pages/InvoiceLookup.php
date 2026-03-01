@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\Order;
-use App\Models\StoreSetting;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 
@@ -11,12 +10,13 @@ class InvoiceLookup extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-magnifying-glass';
     protected static string $view = 'filament.pages.invoice-lookup';
-    protected static ?string $navigationLabel = 'Invoice Pelanggan';
-    protected static ?string $title = 'Invoice Pelanggan';
-    protected static ?string $navigationGroup = 'Laporan';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = 'Invoice Lookup';
+    protected static ?string $title = 'Invoice Lookup';
+    protected static ?string $navigationGroup = 'Toko';
+    protected static ?int $navigationSort = 4;
 
     public string $phone = '';
+    public string $status = 'semua';
     public string $from = '';
     public string $to = '';
     public bool $searched = false;
@@ -28,12 +28,22 @@ class InvoiceLookup extends Page
 
     public function getOrdersProperty(): Collection
     {
-        if (!$this->searched || empty($this->phone)) {
+        if (!$this->searched || empty(trim($this->phone))) {
             return collect();
         }
 
         $query = Order::where('customer_phone', $this->phone)
             ->with(['items', 'paymentMethod']);
+
+        if ($this->status !== 'semua') {
+            if ($this->status === 'proses') {
+                $query->whereIn('status', ['pending', 'confirmed', 'processing', 'shipped']);
+            } elseif ($this->status === 'selesai') {
+                $query->where('status', 'completed');
+            } elseif ($this->status === 'batal') {
+                $query->where('status', 'cancelled');
+            }
+        }
 
         if (!empty($this->from)) {
             $query->whereDate('ordered_at', '>=', $this->from);
@@ -47,7 +57,7 @@ class InvoiceLookup extends Page
 
     public function getTotalRevenueProperty(): float
     {
-        return $this->orders->sum('total');
+        return $this->orders->where('status', 'completed')->sum('total');
     }
 
     public static function canAccess(): bool

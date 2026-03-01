@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Invoice Pembelian - ' . ($setting->store_name ?? 'Taufiq Store'))
+@section('title', 'Riwayat Pesanan - ' . ($setting->store_name ?? 'Taufiq Store'))
 
 @section('head')
     <style>
@@ -208,10 +208,10 @@
             margin-top: 0.5rem;
         }
 
-        /* Print */
+        /* Result bar */
         .print-bar {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
@@ -224,25 +224,44 @@
             font-weight: 600;
         }
 
-        @media print {
+        /* Status Tabs */
+        .status-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: none;
+        }
 
-            .navbar,
-            .footer,
-            .search-card,
-            .print-bar,
-            .flash-bar {
-                display: none !important;
-            }
+        .status-tabs::-webkit-scrollbar {
+            display: none;
+        }
 
-            .page-body {
-                padding: 0 !important;
-            }
+        .status-tab {
+            padding: 0.5rem 1.25rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--mid);
+            background: var(--white);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
 
-            .order-card {
-                break-inside: avoid;
-                box-shadow: none !important;
-                border: 1px solid #ddd;
-            }
+        .status-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary-d);
+        }
+
+        .status-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
         }
 
         @media (max-width: 480px) {
@@ -260,43 +279,44 @@
 @section('content')
     <div class="invoice-wrap">
         <div class="invoice-header">
-            <h1>🧾 Invoice Pembelian</h1>
-            <p>Masukkan nomor HP untuk melihat riwayat pesanan Anda</p>
+            <h1>📋 Riwayat Pesanan</h1>
+            <p>Masukkan nomor HP untuk melihat semua riwayat pesanan Anda</p>
         </div>
 
         <div class="search-card">
-            <form action="{{ route('invoice') }}" method="GET" class="search-form">
+            <form action="{{ route('riwayat-pesanan') }}" method="GET" class="search-form">
                 <div class="search-field" style="flex:2;">
                     <label>Nomor HP / WhatsApp</label>
                     <input type="tel" name="phone" value="{{ request('phone') }}" placeholder="Contoh: 087739612610"
-                        required>
+                        required autofocus>
                 </div>
-                <div class="search-field">
-                    <label>Dari Tanggal</label>
-                    <input type="date" name="from" value="{{ request('from') }}">
-                </div>
-                <div class="search-field">
-                    <label>Sampai Tanggal</label>
-                    <input type="date" name="to" value="{{ request('to') }}">
-                </div>
+                <input type="hidden" name="status" value="{{ request('status', 'semua') }}">
                 <button type="submit" class="btn btn-primary" style="height:42px;white-space:nowrap;">
-                    <i class="fas fa-search"></i> Cari
+                    <i class="fas fa-search"></i> Cari Pesanan
                 </button>
             </form>
         </div>
 
         @if($searched)
+            <div class="status-tabs">
+                <a href="{{ route('riwayat-pesanan', ['phone' => request('phone'), 'status' => 'semua']) }}" 
+                   class="status-tab {{ request('status', 'semua') === 'semua' ? 'active' : '' }}">Semua</a>
+                <a href="{{ route('riwayat-pesanan', ['phone' => request('phone'), 'status' => 'proses']) }}" 
+                   class="status-tab {{ request('status') === 'proses' ? 'active' : '' }}">Dalam Proses</a>
+                <a href="{{ route('riwayat-pesanan', ['phone' => request('phone'), 'status' => 'selesai']) }}" 
+                   class="status-tab {{ request('status') === 'selesai' ? 'active' : '' }}">Selesai</a>
+                <a href="{{ route('riwayat-pesanan', ['phone' => request('phone'), 'status' => 'batal']) }}" 
+                   class="status-tab {{ request('status') === 'batal' ? 'active' : '' }}">Dibatalkan</a>
+            </div>
+
             @if($orders->count() > 0)
                 <div class="print-bar">
                     <div class="result-info">
-                        📋 Ditemukan <strong>{{ $orders->count() }}</strong> pesanan
-                        @if(request('from') || request('to'))
-                            ({{ request('from', '...') }} s/d {{ request('to', '...') }})
+                        📋 Ditemukan <strong>{{ $orders->count() }}</strong> pesanan untuk nomor <strong>{{ request('phone') }}</strong> 
+                        @if(request('status') && request('status') !== 'semua')
+                            dengan status <strong>{{ ucfirst(request('status')) }}</strong>
                         @endif
                     </div>
-                    <button onclick="window.print()" class="btn btn-ghost" style="font-size:0.82rem;">
-                        <i class="fas fa-print"></i> Cetak / Export PDF
-                    </button>
                 </div>
 
                 @foreach($orders as $order)
@@ -312,6 +332,11 @@
                             <span class="order-status status-{{ $order->status }}">
                                 {{ $order->status_label }}
                             </span>
+                            <div style="width: 100%; margin-top: 0.5rem;">
+                                <a href="{{ route('nota.customer', $order->order_code) }}" target="_blank" class="btn btn-ghost" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-print"></i> Cetak Nota
+                                </a>
+                            </div>
                         </div>
                         <div class="order-card-body">
                             <div class="order-items">
@@ -372,11 +397,7 @@
                 <div class="empty-state" style="padding:3rem 1rem;">
                     <span class="empty-state-icon">🔍</span>
                     <h3>Tidak Ada Pesanan</h3>
-                    <p>Tidak ditemukan pesanan untuk nomor <strong>{{ request('phone') }}</strong>
-                        @if(request('from') || request('to'))
-                            pada tanggal {{ request('from', '...') }} s/d {{ request('to', '...') }}
-                        @endif
-                    </p>
+                    <p>Tidak ditemukan pesanan untuk nomor <strong>{{ request('phone') }}</strong>. Pastikan nomor HP yang Anda masukkan sesuai dengan nomor saat memesan.</p>
                 </div>
             @endif
         @endif

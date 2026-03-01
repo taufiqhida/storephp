@@ -13,6 +13,8 @@ Route::middleware([CheckSiteMode::class])->group(function () {
     Route::get('/keranjang', [StoreFrontController::class, 'cart'])->name('cart');
     Route::get('/artikel', [StoreFrontController::class, 'articles'])->name('articles');
     Route::get('/artikel/{slug}', [StoreFrontController::class, 'articleDetail'])->name('article.detail');
+    Route::get('/riwayat-pesanan', [StoreFrontController::class, 'invoice'])->name('riwayat-pesanan');
+    Route::get('/nota/{order_code}', [StoreFrontController::class, 'printCustomerNota'])->name('nota.customer');
 });
 
 // Halaman status — hanya bisa diakses saat mode aktif
@@ -41,3 +43,14 @@ Route::prefix('api')->group(function () {
     Route::post('/testimonial/validate-order', [StoreFrontController::class, 'validateOrderCode']);
     Route::post('/testimonial/submit', [StoreFrontController::class, 'submitTestimonial']);
 });
+
+// Nota cetak admin
+Route::get('/admin-nota/{order}', [StoreFrontController::class, 'printNota'])
+    ->name('admin.nota')
+    ->middleware('auth:admin');
+
+// Cetak semua pesanan (by filter)
+Route::get('/admin-print-orders', [StoreFrontController::class, 'printOrders'])
+    ->name('admin.print-orders')
+    ->middleware('auth:admin');
+

@@ -132,11 +132,14 @@ class StoreFrontController extends Controller
             $query = Order::where('customer_phone', $request->phone)
                 ->with(['items', 'paymentMethod']);
 
-            if ($request->filled('from')) {
-                $query->whereDate('ordered_at', '>=', $request->from);
-            }
-            if ($request->filled('to')) {
-                $query->whereDate('ordered_at', '<=', $request->to);
+            if ($request->filled('status') && $request->status !== 'semua') {
+                if ($request->status === 'proses') {
+                    $query->whereIn('status', ['pending', 'confirmed', 'processing', 'shipped']);
+                } elseif ($request->status === 'selesai') {
+                    $query->where('status', 'completed');
+                } elseif ($request->status === 'batal') {
+                    $query->where('status', 'cancelled');
+                }
             }
 
             $orders = $query->orderBy('ordered_at', 'desc')->get();
@@ -430,5 +433,56 @@ class StoreFrontController extends Controller
             'success' => true,
             'message' => 'Terima kasih! Testimoni Anda akan ditampilkan setelah disetujui admin.',
         ]);
+    }
+
+    public function printNota(\App\Models\Order $order)
+    {
+        $setting = StoreSetting::current();
+        $order->load(['items', 'paymentMethod']);
+        return view('nota', compact('order', 'setting'));
+    }
+
+    public function printCustomerNota(string $order_code)
+    {
+        $setting = StoreSetting::current();
+        $order = Order::where('order_code', strtoupper($order_code))
+            ->with(['items', 'paymentMethod'])
+            ->firstOrFail();
+
+        return view('nota', compact('order', 'setting'));
+    }
+
+    public function printOrders(Request $request)
+    {
+        $setting = StoreSetting::current();
+
+        $query = Order::with(['items', 'paymentMethod']);
+
+        if ($request->filled('phone')) {
+            $query->where('customer_phone', $request->phone);
+        }
+
+        $status = $request->get('status', 'semua');
+        if ($status !== 'semua') {
+            if ($status === 'proses') {
+                $query->whereIn('status', ['pending', 'confirmed', 'processing', 'shipped']);
+            } elseif ($status === 'selesai') {
+                $query->where('status', 'completed');
+            } elseif ($status === 'batal') {
+                $query->where('status', 'cancelled');
+            }
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('ordered_at', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('ordered_at', '<=', $request->to);
+        }
+
+        $orders = $query->orderBy('ordered_at', 'desc')->get();
+        $totalRevenue = $orders->where('status', 'completed')->sum('total');
+
+        return view('print-orders', compact('setting', 'orders', 'totalRevenue', 'request'));
     }
 }

@@ -6,6 +6,7 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Category;
 use App\Models\Product;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
@@ -21,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ProductResource extends Resource
@@ -148,10 +150,17 @@ class ProductResource extends Resource
                                 ->prefix('Rp')
                                 ->default(0),
 
-                            TextInput::make('stock')
-                                ->label('Stok')
-                                ->numeric()
-                                ->default(0),
+                            Placeholder::make('sold_count')
+                                ->label('Terjual (Pesanan Selesai)')
+                                ->content(function ($record): HtmlString {
+                                    if (!$record || !$record->id) {
+                                        return new HtmlString('<span style="color:#94a3b8">—</span>');
+                                    }
+                                    $sold = $record->soldCount();
+                                    return new HtmlString(
+                                        '<strong style="color:#16a34a;font-size:1.1rem">' . $sold . '</strong> unit'
+                                    );
+                                }),
 
                             Toggle::make('is_active')
                                 ->label('Aktif')
