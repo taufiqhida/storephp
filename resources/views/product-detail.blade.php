@@ -469,10 +469,23 @@
                 <div class="variant-label">Pilih Varian: <span class="variant-required-label">* Wajib dipilih</span></div>
                 <div class="variants-grid" id="variantGroup">
                     @foreach($product->variants as $variant)
-                        <div class="variant-option" data-id="{{ $variant->id }}" data-price="{{ $variant->price }}"
-                            data-name="{{ $variant->name }}" onclick="selectVariant(this)">
+                        @php
+                            $variantFlash = $product->flashSales->first(fn($fs) => $fs->product_variant_id == $variant->id);
+                        @endphp
+                        <div class="variant-option"
+                            data-id="{{ $variant->id }}"
+                            data-price="{{ $variant->price }}"
+                            data-name="{{ $variant->name }}"
+                            data-flash-price="{{ $variantFlash ? $variantFlash->flash_price : '' }}"
+                            onclick="selectVariant(this)">
                             {{ $variant->name }}
-                            <br><small>Rp {{ number_format($variant->price, 0, ',', '.') }}</small>
+                            <br>
+                            @if($variantFlash)
+                                <small style="color:#ef4444;font-weight:700;">Rp {{ number_format($variantFlash->flash_price, 0, ',', '.') }}</small>
+                                <small style="text-decoration:line-through;color:#94a3b8;"> Rp {{ number_format($variant->price, 0, ',', '.') }}</small>
+                            @else
+                                <small>Rp {{ number_format($variant->price, 0, ',', '.') }}</small>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -720,14 +733,26 @@
             selectedVariantName = el.dataset.name;
             selectedVariantPrice = parseFloat(el.dataset.price);
 
-            // Update harga utama di halaman
+            // Cek apakah varian ini punya flash price
+            const flashPrice = el.dataset.flashPrice ? parseFloat(el.dataset.flashPrice) : null;
+            const effectivePrice = flashPrice !== null ? flashPrice : selectedVariantPrice;
+
+            // Simpan effective price untuk digunakan di cart & checkout
+            selectedVariantPrice = effectivePrice;
+
+            // Update display harga
             const mainPrice = document.getElementById('mainPriceDisplay');
             if (mainPrice) {
-                mainPrice.textContent = 'Rp ' + Number(selectedVariantPrice).toLocaleString('id');
+                if (flashPrice !== null) {
+                    mainPrice.innerHTML = '<span style="color:#ef4444;font-weight:800;">Rp ' + Number(flashPrice).toLocaleString('id') + '</span> '
+                        + '<span style="text-decoration:line-through;color:#94a3b8;font-size:0.85rem;">Rp ' + Number(parseFloat(el.dataset.price)).toLocaleString('id') + '</span>';
+                } else {
+                    mainPrice.textContent = 'Rp ' + Number(effectivePrice).toLocaleString('id');
+                }
             }
 
             document.getElementById('summaryVariant').textContent = 'Varian: ' + el.dataset.name;
-            document.getElementById('summaryPrice').textContent = 'Rp ' + Number(selectedVariantPrice).toLocaleString('id');
+            document.getElementById('summaryPrice').textContent = 'Rp ' + Number(effectivePrice).toLocaleString('id');
 
             // Sembunyikan warning & aktifkan tombol
             const warning = document.getElementById('variantWarning');
@@ -759,13 +784,12 @@
             const item = {
                 id: {{ $product->id }},
                 name: '{{ addslashes($product->name) }}',
-                price: selectedVariantPrice,
+                price: selectedVariantPrice,   // sudah = flash price jika ada
                 image: '{{ $product->image ? asset("storage/" . $product->image) : "" }}',
                 variant: selectedVariantName || null,
                 variantId: selectedVariantId || null,
             };
 
-            // Tambah sesuai jumlah qty yang dipilih
             for (let i = 0; i < quantity; i++) {
                 addToCart(item);
             }

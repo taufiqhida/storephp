@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FlashSaleResource\Pages;
 use App\Models\FlashSale;
+use App\Models\ProductVariant;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -34,12 +35,25 @@ class FlashSaleResource extends Resource
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->live()                          // reactive: update varian saat produk berubah
+                    ->afterStateUpdated(fn($set) => $set('product_variant_id', null)),
+
                 Select::make('product_variant_id')
-                    ->label('Varian (opsional)')
-                    ->relationship('variant', 'name')
-                    ->searchable()
-                    ->preload(),
+                    ->label('Varian')
+                    ->options(function ($get) {
+                        $productId = $get('product_id');
+                        if (!$productId) return [];
+                        return \App\Models\ProductVariant::where('product_id', $productId)
+                            ->where('is_active', true)
+                            ->orderBy('sort_order')
+                            ->pluck('name', 'id');
+                    })
+                    ->required(fn($get) => \App\Models\ProductVariant::where('product_id', $get('product_id'))->where('is_active', true)->exists())
+                    ->placeholder(fn($get) => $get('product_id') ? 'Pilih varian...' : '← Pilih produk dulu')
+                    ->live()
+                    ->disabled(fn($get) => !$get('product_id')),
+
                 TextInput::make('flash_price')->label('Harga Flash Sale (Rp)')->numeric()->prefix('Rp')->required(),
                 TextInput::make('flash_stock')->label('Stok Flash Sale')->numeric()->default(0),
                 DateTimePicker::make('starts_at')->label('Mulai')->required(),

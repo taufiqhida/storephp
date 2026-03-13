@@ -89,6 +89,7 @@
     @if($products->count() > 0)
         <div class="products-grid">
             @foreach($products as $product)
+                @php $activeFs = $product->flashSales->first(); @endphp
                 <a href="{{ route('product.detail', $product->slug) }}" class="product-card">
                     <div class="card-img">
                         @if($product->image)
@@ -99,7 +100,9 @@
                                 🛍️</div>
                         @endif
 
-                        @if($product->badge)
+                        @if($activeFs)
+                            <div class="card-badge flash">⚡ Flash</div>
+                        @elseif($product->badge)
                             <div class="card-badge {{ $product->badge }}">{{ $product->badge_label }}</div>
                         @endif
                     </div>
@@ -107,13 +110,23 @@
                         <div class="card-category">{{ $product->category->name ?? '' }}</div>
                         <div class="card-name">{{ $product->name }}</div>
                         <div class="card-price">
-                            <span class="from-text">mulai </span>
-                            Rp {{ number_format($product->base_price, 0, ',', '.') }}
+                            @if($activeFs)
+                                <span style="color:var(--red);font-size:1rem;font-weight:800;">
+                                    Rp {{ number_format($activeFs->flash_price, 0, ',', '.') }}
+                                </span>
+                                <span style="text-decoration:line-through;color:var(--muted);font-size:0.75rem;margin-left:4px;">
+                                    Rp {{ number_format($product->base_price, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span class="from-text">mulai </span>
+                                Rp {{ number_format($product->base_price, 0, ',', '.') }}
+                            @endif
                         </div>
                     </div>
                 </a>
             @endforeach
         </div>
+
 
         {{-- PAGINATION --}}
         <div class="pagination">

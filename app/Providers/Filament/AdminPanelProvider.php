@@ -3,8 +3,10 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\StoreSettings;
+use App\Filament\Widgets\DailySalesWidget;
 use App\Filament\Widgets\SalesChartWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
+use App\Filament\Widgets\TopBuyersWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -55,6 +57,8 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverviewWidget::class,
                 SalesChartWidget::class,
+                TopBuyersWidget::class,
+                DailySalesWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

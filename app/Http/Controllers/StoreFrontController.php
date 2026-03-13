@@ -22,7 +22,13 @@ class StoreFrontController extends Controller
     {
         $setting = StoreSetting::current();
         $categories = Category::where('is_active', true)->orderBy('sort_order')->get();
-        $query = Product::where('is_active', true)->with(['category', 'variants' => fn($q) => $q->where('is_active', true)]);
+        $query = Product::where('is_active', true)->with([
+            'category',
+            'variants' => fn($q) => $q->where('is_active', true),
+            'flashSales' => fn($q) => $q->where('is_active', true)
+                ->where('starts_at', '<=', now())
+                ->where('ends_at', '>=', now()),
+        ]);
 
         if ($request->filled('kategori')) {
             $query->whereHas('category', fn($q) => $q->where('slug', $request->kategori));
@@ -57,7 +63,13 @@ class StoreFrontController extends Controller
         $setting = StoreSetting::current();
         $product = Product::where('slug', $slug)
             ->where('is_active', true)
-            ->with(['category', 'variants' => fn($q) => $q->where('is_active', true)->orderBy('sort_order')])
+            ->with([
+                'category',
+                'variants' => fn($q) => $q->where('is_active', true)->orderBy('sort_order'),
+                'flashSales' => fn($q) => $q->where('is_active', true)
+                    ->where('starts_at', '<=', now())
+                    ->where('ends_at', '>=', now()),
+            ])
             ->firstOrFail();
 
         $flashSale = $product->activeFlashSale();
@@ -252,10 +264,20 @@ class StoreFrontController extends Controller
                         }
                     }
 
-                    // Check flash sale
+                    // Check flash sale — bisa untuk produk tanpa varian ATAU untuk varian spesifik
                     $flashSale = $product->activeFlashSale();
-                    if ($flashSale && !$variant) {
-                        $price = (float) $flashSale->flash_price;
+                    if ($flashSale) {
+                        // Flash sale berlaku jika:
+                        // - FS tanpa varian spesifik (berlaku untuk semua / produk polos), ATAU
+                        // - FS untuk varian yang dipilih
+                        $fsVariantId = $flashSale->product_variant_id;
+                        if (!$variant && !$fsVariantId) {
+                            // produk tanpa varian
+                            $price = (float) $flashSale->flash_price;
+                        } elseif ($variant && $fsVariantId && $fsVariantId == $variant->id) {
+                            // varian yang sama dengan flash sale
+                            $price = (float) $flashSale->flash_price;
+                        }
                     }
 
                     $qty = (int) $item['quantity'];
@@ -424,7 +446,7 @@ class StoreFrontController extends Controller
             'order_code' => $order->order_code,
             'customer_name' => $order->customer_name,
             'rating' => $request->rating,
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'product_name' => $productNames,
             'status' => 'pending',
         ]);

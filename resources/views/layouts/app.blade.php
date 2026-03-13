@@ -1328,11 +1328,83 @@
                 padding: 2.5rem 1rem;
             }
         }
+
+        /* ════════════════════════════════════
+           HAMBURGER / MOBILE NAV
+        ════════════════════════════════════ */
+        .nav-burger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 38px;
+            height: 38px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background var(--t);
+        }
+
+        .nav-burger:hover { background: var(--primary-l); }
+
+        .nav-burger span {
+            display: block;
+            height: 2.5px;
+            background: var(--dark);
+            border-radius: 2px;
+            transition: all .3s;
+        }
+
+        .mobile-nav {
+            display: none;
+            flex-direction: column;
+            background: rgba(255,255,255,.98);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 1rem 1rem;
+            gap: 0.25rem;
+        }
+
+        .mobile-nav .nav-link {
+            padding: .65rem .9rem;
+            border-radius: var(--radius-sm);
+            font-size: .9rem;
+        }
+
+        .mobile-nav .nav-cart-btn {
+            padding: .65rem .9rem;
+            border-radius: var(--radius-sm);
+            font-size: .9rem;
+            justify-content: flex-start;
+        }
+
+        @media (max-width: 768px) {
+            .nav-burger { display: flex; }
+            .nav-desktop { display: none !important; }
+            .nav-search { max-width: 200px; }
+            .mobile-nav.open { display: flex; }
+        }
+
+        @media (max-width: 480px) {
+            .nav-search { max-width: 150px; }
+        }
+
+        /* Fix toast utk mobile */
+        @media (max-width: 480px) {
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+                max-width: 100%;
+            }
+        }
     </style>
     @yield('head')
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0 pt-[72px]">
+<body>
     @php
         $setting = \App\Models\StoreSetting::current();
     @endphp
@@ -1471,7 +1543,7 @@
     {{-- FLASH BAR --}}
 
     {{-- NAVBAR --}}
-    <nav class="navbar">
+    <nav class="navbar" id="mainNav">
         <div class="nav-inner">
             <a href="{{ route('home') }}" class="nav-brand">
                 <div class="nav-brand-logo">🛍️</div>
@@ -1484,7 +1556,8 @@
                 <div class="search-dropdown" id="searchDrop"></div>
             </div>
 
-            <div class="nav-actions">
+            {{-- Desktop nav links --}}
+            <div class="nav-actions nav-desktop">
                 <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                     <i class="fas fa-store"></i>
                     <span class="nav-link-text">Produk</span>
@@ -1505,6 +1578,38 @@
                     <span class="cart-badge" id="cartBadge">0</span>
                 </a>
             </div>
+
+            {{-- Mobile: cart icon + hamburger --}}
+            <div class="nav-actions" style="margin-left:auto;">
+                <a href="{{ route('cart') }}" class="nav-cart-btn" style="display:none;" id="mobileCartBtn">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-badge" id="cartBadgeMobile">0</span>
+                </a>
+                <button class="nav-burger" id="burgerBtn" onclick="toggleMobileNav()" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Mobile nav drawer --}}
+        <div class="mobile-nav" id="mobileNav">
+            <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                <i class="fas fa-store"></i> Produk
+            </a>
+            <a href="{{ route('articles') }}"
+                class="nav-link {{ request()->routeIs('articles', 'article.detail') ? 'active' : '' }}">
+                <i class="fas fa-newspaper"></i> Artikel
+            </a>
+            <a href="{{ route('riwayat-pesanan') }}"
+                class="nav-link {{ request()->routeIs('riwayat-pesanan') ? 'active' : '' }}">
+                <i class="fas fa-receipt"></i> Pesanan Saya
+            </a>
+            <a href="{{ route('cart') }}" class="nav-cart-btn">
+                <i class="fas fa-shopping-bag"></i> Keranjang
+                <span class="cart-badge" id="cartBadgeMobile2" style="position:static;display:none!important;"></span>
+            </a>
         </div>
     </nav>
 
@@ -1599,9 +1704,27 @@
         function saveCart(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); updateBadge(); }
         function updateBadge() {
             const n = getCart().reduce((s, i) => s + (i.qty || 1), 0);
-            const b = document.getElementById('cartBadge');
-            if (b) { b.textContent = n; b.style.display = n > 0 ? 'flex' : 'none'; }
+            ['cartBadge', 'cartBadgeMobile'].forEach(id => {
+                const b = document.getElementById(id);
+                if (b) { b.textContent = n; b.style.display = n > 0 ? 'flex' : 'none'; }
+            });
         }
+
+        // ═══ MOBILE NAV ═══
+        function toggleMobileNav() {
+            const nav = document.getElementById('mobileNav');
+            const btn = document.getElementById('burgerBtn');
+            if (nav) nav.classList.toggle('open');
+            if (btn) btn.classList.toggle('open');
+        }
+        // Show mobile cart btn on small screens
+        function checkMobileCartBtn() {
+            const btn = document.getElementById('mobileCartBtn');
+            if (btn) btn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+        }
+        window.addEventListener('resize', checkMobileCartBtn);
+        document.addEventListener('DOMContentLoaded', checkMobileCartBtn);
+
         function addToCart(item) {
             const cart = getCart();
             const key = item.id + (item.variantId ? '_' + item.variantId : '');
