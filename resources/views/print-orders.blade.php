@@ -352,17 +352,17 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($orders as $i => $order)
+                @forelse($orders as $order)
                     @php
-                        $badgeClass = match ($order->status) {
-                            'completed' => 'badge-completed',
-                            'cancelled' => 'badge-cancelled',
-                            'pending' => 'badge-pending',
-                            default => 'badge-proses',
-                        };
+                        switch ($order->status) {
+                            case 'completed': $badgeClass = 'badge-completed'; break;
+                            case 'cancelled': $badgeClass = 'badge-cancelled'; break;
+                            case 'pending':   $badgeClass = 'badge-pending';   break;
+                            default:          $badgeClass = 'badge-proses';    break;
+                        }
                     @endphp
                     <tr>
-                        <td>{{ $i + 1 }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td>
                             <div class="td-code">{{ $order->order_code }}</div>
                             <div class="td-date">{{ $order->ordered_at ? $order->ordered_at->format('d/m/Y H:i') : '-' }}
